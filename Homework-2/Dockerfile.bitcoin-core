@@ -1,0 +1,34 @@
+FROM ubuntu:24.04
+
+ARG BITCOIN_REF=v29.0
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PATH=/src/bitcoin/build/bin:$PATH
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    git \
+    build-essential \
+    cmake \
+    pkgconf \
+    python3 \
+    libevent-dev \
+    libboost-dev \
+    libsqlite3-dev \
+    qtbase5-dev \
+    qttools5-dev \
+    qttools5-dev-tools \
+    libqt5svg5-dev \
+    libgl-dev \
+    libqrencode-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /src
+
+RUN git clone --depth 1 --branch ${BITCOIN_REF} https://github.com/bitcoin/bitcoin.git
+
+WORKDIR /src/bitcoin
+
+RUN cmake -B build -DBUILD_GUI=ON -DBUILD_TESTS=OFF -DENABLE_IPC=OFF -DWITH_ZMQ=OFF \
+    && cmake --build build -j2 --target bitcoind bitcoin-cli bitcoin-qt
+
+CMD ["bash"]

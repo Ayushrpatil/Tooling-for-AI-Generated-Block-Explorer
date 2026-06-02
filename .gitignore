@@ -1,0 +1,6 @@
+__pycache__/
+*.py[cod]
+
+Homework-2/bitcoin-data/*
+!Homework-2/bitcoin-data/.gitignore
+!Homework-2/bitcoin-data/.gitkeep
