@@ -1,0 +1,67 @@
+[
+  {
+    "id": "block_count",
+    "question": "How many blocks are currently stored in the database?",
+    "expected_sql": "SELECT COUNT(*) AS block_count FROM blocks;"
+  },
+  {
+    "id": "latest_height",
+    "question": "What is the latest block height in the database?",
+    "expected_sql": "SELECT MAX(height) AS latest_block_height FROM blocks;"
+  },
+  {
+    "id": "genesis_hash",
+    "question": "What is the hash of the genesis block?",
+    "expected_sql": "SELECT block_hash AS genesis_block_hash FROM blocks WHERE height = 0;"
+  },
+  {
+    "id": "latest_block_hash",
+    "question": "What is the hash of the newest block we have downloaded?",
+    "expected_sql": "SELECT block_hash AS latest_block_hash FROM blocks ORDER BY height DESC LIMIT 1;"
+  },
+  {
+    "id": "total_transactions",
+    "question": "How many transactions are stored in the database?",
+    "expected_sql": "SELECT COUNT(*) AS transaction_count FROM transactions;"
+  },
+  {
+    "id": "coinbase_transactions",
+    "question": "How many coinbase transactions are in the database?",
+    "expected_sql": "SELECT COUNT(*) AS coinbase_transaction_count FROM transactions WHERE is_coinbase = 1;"
+  },
+  {
+    "id": "max_tx_block",
+    "question": "Which block has the highest number of transactions?",
+    "expected_sql": "SELECT height, block_hash, tx_count FROM blocks ORDER BY tx_count DESC, height ASC LIMIT 1;"
+  },
+  {
+    "id": "average_tx_per_block",
+    "question": "What is the average number of transactions per block?",
+    "expected_sql": "SELECT ROUND(AVG(tx_count), 6) AS average_transactions_per_block FROM blocks;"
+  },
+  {
+    "id": "largest_output",
+    "question": "What is the largest transaction output value in satoshis?",
+    "expected_sql": "SELECT MAX(value_sats) AS max_output_sats FROM transaction_outputs;"
+  },
+  {
+    "id": "segwit_transaction_count",
+    "question": "How many distinct transactions have at least one witness stack item?",
+    "expected_sql": "SELECT COUNT(DISTINCT txid) AS segwit_transaction_count FROM transaction_input_witness;"
+  },
+  {
+    "id": "most_common_output_script_type",
+    "question": "Which output script type appears most often in the database?",
+    "expected_sql": "SELECT script_pubkey_type, COUNT(*) AS output_count FROM transaction_outputs GROUP BY script_pubkey_type ORDER BY output_count DESC, script_pubkey_type ASC LIMIT 1;"
+  },
+  {
+    "id": "unspent_output_count",
+    "question": "How many outputs are currently unspent within this database snapshot?",
+    "expected_sql": "SELECT COUNT(*) AS unspent_output_count FROM transaction_outputs o LEFT JOIN transaction_inputs i ON i.prev_txid = o.txid AND i.prev_vout = o.vout_index WHERE i.prev_txid IS NULL;"
+  },
+  {
+    "id": "top_receiving_address_by_sats",
+    "question": "Which address has received the greatest total number of satoshis in the database?",
+    "expected_sql": "SELECT toa.address, SUM(o.value_sats) AS total_received_sats FROM transaction_output_addresses toa JOIN transaction_outputs o ON o.txid = toa.txid AND o.vout_index = toa.vout_index GROUP BY toa.address ORDER BY total_received_sats DESC, toa.address ASC LIMIT 1;"
+  }
+]

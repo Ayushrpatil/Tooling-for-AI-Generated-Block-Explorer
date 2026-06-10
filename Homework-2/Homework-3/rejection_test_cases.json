@@ -1,0 +1,14 @@
+[
+  {
+    "id": "latest_btc_usd_price",
+    "question": "What was the USD price of bitcoin at the time of the latest block in the database?"
+  },
+  {
+    "id": "latest_block_peer",
+    "question": "Which network peer delivered the latest block to this node?"
+  },
+  {
+    "id": "miner_geography",
+    "question": "Which country mined the block at height 100000?"
+  }
+]

@@ -4,3 +4,7 @@ __pycache__/
 Homework-2/bitcoin-data/*
 !Homework-2/bitcoin-data/.gitignore
 !Homework-2/bitcoin-data/.gitkeep
+
+Homework-2/Homework-3/__pycache__/
+Homework-2/Homework-3/*.sqlite
+Homework-2/Homework-3/test_report.md

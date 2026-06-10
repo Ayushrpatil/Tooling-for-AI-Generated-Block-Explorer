@@ -1,0 +1,20 @@
+[
+  {
+    "id": "ancestor_spend_path",
+    "question": "Find the earliest block where an output was eventually spent by a transaction whose output was later spent again within 3 more hops, and return the full transaction chain.",
+    "expected_sql": "WITH RECURSIVE spend_chain(depth, origin_txid, origin_vout, spending_txid, spending_vout) AS ( SELECT 1, ti.prev_txid, ti.prev_vout, ti.txid, 0 FROM transaction_inputs ti WHERE ti.prev_txid IS NOT NULL UNION ALL SELECT sc.depth + 1, sc.origin_txid, sc.origin_vout, ti.txid, 0 FROM spend_chain sc JOIN transaction_inputs ti ON ti.prev_txid = sc.spending_txid WHERE sc.depth < 4 ) SELECT origin_txid, origin_vout, spending_txid, depth FROM spend_chain ORDER BY depth DESC, origin_txid LIMIT 25;",
+    "why_hard": "Requires recursive graph traversal over UTXO spending relationships, which text-to-SQL systems often fail to compose correctly."
+  },
+  {
+    "id": "rolling_median",
+    "question": "For every 100-block window, compute the median transaction output value and return the window with the largest increase versus the previous window.",
+    "expected_sql": "WITH output_windows AS ( SELECT b.height / 100 AS window_id, o.value_sats FROM transaction_outputs o JOIN transactions t ON t.txid = o.txid JOIN blocks b ON b.block_hash = t.block_hash ), ranked AS ( SELECT window_id, value_sats, ROW_NUMBER() OVER (PARTITION BY window_id ORDER BY value_sats) AS rn, COUNT(*) OVER (PARTITION BY window_id) AS cnt FROM output_windows ), medians AS ( SELECT window_id, AVG(value_sats) AS median_value_sats FROM ranked WHERE rn IN ((cnt + 1) / 2, (cnt + 2) / 2) GROUP BY window_id ), changes AS ( SELECT window_id, median_value_sats, median_value_sats - LAG(median_value_sats) OVER (ORDER BY window_id) AS delta FROM medians ) SELECT * FROM changes ORDER BY delta DESC LIMIT 1;",
+    "why_hard": "Requires window functions, grouped medians, and a second-order comparison across windows."
+  },
+  {
+    "id": "address_reuse_pattern",
+    "question": "Which output address appears in the greatest number of distinct blocks while also receiving outputs from at least three different transaction versions?",
+    "expected_sql": "WITH address_stats AS ( SELECT toa.address, COUNT(DISTINCT t.block_hash) AS distinct_blocks, COUNT(DISTINCT t.version) AS distinct_versions FROM transaction_output_addresses toa JOIN transaction_outputs o ON o.txid = toa.txid AND o.vout_index = toa.vout_index JOIN transactions t ON t.txid = o.txid GROUP BY toa.address HAVING COUNT(DISTINCT t.version) >= 3 ) SELECT address, distinct_blocks, distinct_versions FROM address_stats ORDER BY distinct_blocks DESC, distinct_versions DESC, address ASC LIMIT 1;",
+    "why_hard": "Requires multi-table aggregation, distinct counting across two dimensions, and a constrained ranking step over addresses."
+  }
+]
